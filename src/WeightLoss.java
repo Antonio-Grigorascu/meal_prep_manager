@@ -1,0 +1,12 @@
+public class WeightLoss implements NutritionalGoal {
+    @Override
+    public int calculateCalorieTarget(User user) {
+        double tdee = user.getTDEE();
+        return (int)(tdee - 500); // deficit caloric moderat (~0.5kg/săptămână)
+    }
+
+    @Override
+    public String getGoalName() {
+        return "Weight Loss";
+    }
+}
