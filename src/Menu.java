@@ -42,6 +42,8 @@ public class Menu {
             System.out.println("5. Adaugă rețetă");
             System.out.println("6. Vezi toate rețetele");
             System.out.println("7. Vezi toate ingredientele");
+            System.out.println("8. Actualizează greutatea");
+            System.out.println("9. Vezi progresul greutății");
             System.out.println("0. Ieși");
             System.out.print("Alege opțiunea: ");
 
@@ -68,6 +70,12 @@ public class Menu {
                     break;
                 case "7":
                     viewIngredients();
+                    break;
+                case "8":
+                    updateUserWeight();
+                    break;
+                case "9":
+                    showWeightProgress();
                     break;
                 case "0":
                     running = false;
@@ -227,7 +235,7 @@ public class Menu {
             input = scanner.nextLine().trim();
             if (input.equalsIgnoreCase("nou")) {
                 createRecipe();
-                selectedRecipe = recipeList.get(recipeList.size() - 1); // ultima creata
+                selectedRecipe = recipeList.get(recipeList.size() - 1); // ultima
                 break;
             } else {
                 try {
@@ -411,4 +419,34 @@ public class Menu {
             System.out.println(i + ": " + ingredient.getName() + " - " + ingredient.getMacros());
         }
     }
+
+    private void updateUserWeight() {
+        System.out.print("Introduceți noua greutate (kg): ");
+        double newWeight;
+        while (true) {
+            try {
+                newWeight = Double.parseDouble(scanner.nextLine().trim());
+                if (newWeight > 0) break;
+                System.out.print("⚠️ Greutatea trebuie să fie un număr pozitiv. Reintrodu: ");
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ Greutatea trebuie să fie un număr. Reintrodu: ");
+            }
+        }
+        user.updateWeight(newWeight);
+        System.out.println("✅ Greutatea a fost actualizată! Noua greutate este: " + user.getWeight() + " kg.");
+    }
+
+    private void showWeightProgress() {
+        List<Double> weightHistory = user.getWeightHistory();
+        if (weightHistory.isEmpty()) {
+            System.out.println("⚠️ Nu există date despre greutate.");
+            return;
+        }
+
+        System.out.println("\n📊 Evoluția greutății:");
+        for (int i = 0; i < weightHistory.size(); i++) {
+            System.out.println("Etapa " + (i + 1) + ": " + weightHistory.get(i) + " kg");
+        }
+    }
+
 }

@@ -1,4 +1,4 @@
-public class WeightLoss implements NutritionalGoal {
+public class WeightLoss extends NutritionalGoal {
     @Override
     public int calculateCalorieTarget(User user) {
         double tdee = user.getTDEE();

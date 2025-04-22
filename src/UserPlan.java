@@ -13,22 +13,21 @@ public class UserPlan {
         int targetCalories = goal.calculateCalorieTarget(user);
         Macros totalMacros = mealPlan.getTotalMacros();
 
-        System.out.println("\nEvaluating plan for " + user.getName() + ":");
-        System.out.println("Calorie target (" + goal.getGoalName() + "): " + targetCalories + " kcal");
-        System.out.println("Total calories in plan: " + totalMacros.getCalories() + " kcal");
+        System.out.println("\nEvaluare plan pentru " + user.getName() + ":");
+        System.out.println("Ținta calorică (" + goal.getGoalName() + "): " + targetCalories + " kcal");
+        System.out.println("Total calorii în plan: " + totalMacros.getCalories() + " kcal");
 
         if (totalMacros.getCalories() < targetCalories - 100) {
-            System.out.println("⚠️  Sub caloric target by " + (targetCalories - totalMacros.getCalories()) + " kcal");
+            System.out.println("⚠️  Sub ținta calorică cu " + (targetCalories - totalMacros.getCalories()) + " kcal");
         } else if (totalMacros.getCalories() > targetCalories + 100) {
-            System.out.println("⚠️  Over caloric target by " + (totalMacros.getCalories() - targetCalories) + " kcal");
+            System.out.println("⚠️  Peste ținta calorică cu " + (totalMacros.getCalories() - targetCalories) + " kcal");
         } else {
-            System.out.println("✅  Caloric target met!");
+            System.out.println("✅ Ținta calorică atinsă!");
         }
 
-        // Optionally: Evaluate protein, fat, carbs
-        System.out.println("Macros breakdown:");
-        System.out.println("Protein: " + totalMacros.getProteins() + "g");
-        System.out.println("Fat: " + totalMacros.getFats() + "g");
-        System.out.println("Carbs: " + totalMacros.getCarbs() + "g");
+        System.out.println("Detaliere macronutrienți:");
+        System.out.println("Proteine: " + totalMacros.getProteins() + "g");
+        System.out.println("Grăsimi: " + totalMacros.getFats() + "g");
+        System.out.println("Carbohidrați: " + totalMacros.getCarbs() + "g");
     }
 }

@@ -1,4 +1,4 @@
-public interface NutritionalGoal {
-    int calculateCalorieTarget(User user);
-    String getGoalName();
+public abstract class NutritionalGoal {
+    abstract int calculateCalorieTarget(User user);
+    abstract String getGoalName();
 }

@@ -1,4 +1,4 @@
-public class Maintenance implements NutritionalGoal {
+public class Maintenance extends NutritionalGoal {
     @Override
     public int calculateCalorieTarget(User user) {
         return (int)(user.getTDEE());

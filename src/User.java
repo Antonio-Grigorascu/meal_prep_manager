@@ -1,10 +1,14 @@
-public class User {
+import java.util.ArrayList;
+import java.util.List;
+
+public class User implements Trackable{
     private String name;
     private int age;
     private double weight; // in kg
     private double height; // in cm
     private String gender; // "male" or "female"
     private ActivityLevel activityLevel;
+    private List<Double> weightHistory;
 
     public User(String name, int age, double weight, double height, String gender, ActivityLevel activityLevel) {
         this.name = name;
@@ -13,6 +17,24 @@ public class User {
         this.height = height;
         this.gender = gender.toLowerCase();
         this.activityLevel = activityLevel;
+        this.weightHistory = new ArrayList<>();
+        this.weightHistory.add(weight);
+    }
+
+    @Override
+    public void updateWeight(double newWeight) {
+        this.weight = newWeight;
+        this.weightHistory.add(newWeight);
+    }
+
+    @Override
+    public double getCurrentWeight() {
+        return this.weight;
+    }
+
+    @Override
+    public List<Double> getWeightHistory() {
+        return new ArrayList<>(this.weightHistory);
     }
 
     public double getBMR() {
