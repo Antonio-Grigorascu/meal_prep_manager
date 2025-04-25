@@ -1,3 +1,5 @@
+package models.ingredients;
+
 import java.util.Objects;
 
 public abstract class Ingredient{
@@ -19,6 +21,11 @@ public abstract class Ingredient{
     @Override
     public int hashCode() {
         return Objects.hash(name, macros);
+    }
+
+    @Override
+    public String toString() {
+        return "Ingredient: " + name + " | Macros: [" + macros + "]";
     }
 
     public String getName() {

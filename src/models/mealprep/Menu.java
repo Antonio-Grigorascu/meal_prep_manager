@@ -1,4 +1,12 @@
-import java.io.IOException;
+package models.mealprep;
+
+import enums.ActivityLevel;
+import enums.MealType;
+import models.ingredients.*;
+import models.meals.Meal;
+import models.meals.Recipe;
+import models.plans.*;
+
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
@@ -291,7 +299,10 @@ public class Menu {
             System.out.print("⚠️ Numele ingredientului nu poate fi gol. Introdu un nume valid: ");
         }
 
-        System.out.println("Tip ingredient: 1. UnitIngredient | 2. WeightIngredient | 3. VolumeIngredient");
+        System.out.println("Tip ingredient:");
+        System.out.println("1. Ingredient pe unitate (bucăți)");
+        System.out.println("2. Ingredient pe greutate (grame)");
+        System.out.println("3. Ingredient pe volum (mililitri)");
         String type;
         while (true) {
             type = scanner.nextLine().trim();
@@ -364,7 +375,7 @@ public class Menu {
         };
 
         ingredientList.add(ingredient);
-        System.out.println("✅ Ingredient adăugat.");
+        System.out.println("✅ models.ingredients.Ingredient adăugat.");
     }
 
     private void createRecipe() {
@@ -439,7 +450,7 @@ public class Menu {
         System.out.println("\n📋 Lista ingredientelor:");
         for (int i = 0; i < ingredientList.size(); i++) {
             Ingredient ingredient = ingredientList.get(i);
-            System.out.println(i + ": " + ingredient.getName() + " - " + ingredient.getMacros());
+            System.out.println(i + ": " + ingredient);
         }
     }
 

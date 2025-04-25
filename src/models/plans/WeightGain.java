@@ -1,3 +1,5 @@
+package models.plans;
+
 public class WeightGain extends NutritionalGoal {
     @Override
     public int calculateCalorieTarget(User user) {

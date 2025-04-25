@@ -1,3 +1,7 @@
+package models.plans;
+
+import models.ingredients.Macros;
+
 public class UserPlan {
     private User user;
     private MealPlan mealPlan;

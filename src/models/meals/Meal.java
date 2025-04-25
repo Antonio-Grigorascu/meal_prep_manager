@@ -1,3 +1,8 @@
+package models.meals;
+
+import enums.MealType;
+import models.ingredients.Macros;
+
 public class Meal implements Comparable<Meal> {
     private MealType mealType;
     private Recipe recipe;

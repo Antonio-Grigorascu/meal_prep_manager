@@ -1,7 +1,12 @@
+package models.plans;
+
+import enums.ActivityLevel;
+import interfaces.Trackable;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class User implements Trackable{
+public class User implements Trackable {
     private String name;
     private int age;
     private double weight; // in kg

@@ -1,3 +1,5 @@
+package enums;
+
 public enum ActivityLevel {
     SEDENTARY("Sedentary", 1.2),
     LIGHTLY_ACTIVE("Lightly Active", 1.375),

@@ -1,3 +1,5 @@
+package models.plans;
+
 public class Maintenance extends NutritionalGoal {
     @Override
     public int calculateCalorieTarget(User user) {
@@ -6,6 +8,6 @@ public class Maintenance extends NutritionalGoal {
 
     @Override
     public String getGoalName() {
-        return "Maintenance";
+        return "models.plans.Maintenance";
     }
 }

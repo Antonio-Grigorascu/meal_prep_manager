@@ -1,6 +1,9 @@
-import java.util.ArrayList;
+package models.meals;
+
+import models.ingredients.Ingredient;
+import models.ingredients.Macros;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Recipe {
@@ -25,7 +28,11 @@ public class Recipe {
     }
 
     public void addIngredient(Ingredient ingredient, double quantity) {
-        this.ingredients.put(ingredient, quantity);
+        if (this.ingredients.containsKey(ingredient)) {
+            this.ingredients.put(ingredient, this.ingredients.get(ingredient) + quantity);
+        } else {
+            this.ingredients.put(ingredient, quantity);
+        }
     }
 
     public void removeIngredient(Ingredient ingredient) {
@@ -57,13 +64,13 @@ public class Recipe {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Recipe: ").append(name).append("\nIngredients:\n");
+        sb.append("models.meals.Recipe: ").append(name).append("\nIngredients:\n");
         for (Map.Entry<Ingredient, Double> entry : ingredients.entrySet()) {
             sb.append("- ").append(entry.getKey().getName())
                     .append(" (").append(entry.getValue()).append("g): ")
                     .append(entry.getKey().getMacros()).append("\n");
         }
-        sb.append("Total Macros: ").append(getTotalMacros());
+        sb.append("Total models.ingredients.Macros: ").append(getTotalMacros());
         return sb.toString();
     }
 

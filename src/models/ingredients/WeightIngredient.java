@@ -1,3 +1,5 @@
+package models.ingredients;
+
 public class WeightIngredient extends Ingredient {
     private final String unit = "g";
 

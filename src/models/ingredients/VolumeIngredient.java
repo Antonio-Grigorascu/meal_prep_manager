@@ -1,3 +1,5 @@
+package models.ingredients;
+
 public class VolumeIngredient extends Ingredient {
     private final String unit = "ml";
 

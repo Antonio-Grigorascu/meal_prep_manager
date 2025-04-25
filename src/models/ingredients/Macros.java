@@ -1,3 +1,5 @@
+package models.ingredients;
+
 import java.util.Objects;
 
 public class Macros {
@@ -59,12 +61,10 @@ public class Macros {
 
     @Override
     public String toString() {
-        return "Macros{" +
-                "calories=" + calories +
-                ", proteins=" + proteins +
-                ", fats=" + fats +
-                ", carbs=" + carbs +
-                '}';
+        return "Calorii: " + calories +
+                " kcal, Proteine: " + proteins +
+                " g, Grăsimi: " + fats +
+                " g, Carbohidrați: " + carbs + " g";
     }
 
     public Macros add(Macros macros) {

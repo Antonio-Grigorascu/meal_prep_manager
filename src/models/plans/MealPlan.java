@@ -1,3 +1,8 @@
+package models.plans;
+
+import models.ingredients.Macros;
+import models.meals.Meal;
+
 import java.util.Set;
 import java.util.TreeSet;
 
