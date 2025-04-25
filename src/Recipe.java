@@ -42,7 +42,8 @@ public class Recipe {
             Ingredient ingredient = entry.getKey();
             double quantity = entry.getValue();
             Macros macros = ingredient.getMacros();
-            double factor = quantity / 100.0;
+            double factor = ingredient.getNutritionFactor(quantity);
+
 
             totalCalories += (int) (macros.getCalories() * factor);
             totalProteins += (int) (macros.getProteins() * factor);

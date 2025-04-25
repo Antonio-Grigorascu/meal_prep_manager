@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
@@ -6,7 +7,7 @@ public class Menu {
 
     private static Menu instance; // Singleton
 
-    private Scanner scanner;
+    final private Scanner scanner;
     private User user;
     private MealPlan mealPlan;
     private NutritionalGoal goal;
@@ -34,7 +35,9 @@ public class Menu {
 
         boolean running = true;
         while (running) {
-            System.out.println("\n-----------------------------");
+            System.out.println("\nApasă Enter pentru a reveni la meniu...");
+            scanner.nextLine();
+            System.out.println("===== Meniu =====");
             System.out.println("1. Adaugă o masă");
             System.out.println("2. Vezi planul curent");
             System.out.println("3. Evaluează planul");
@@ -261,13 +264,12 @@ public class Menu {
     private void viewPlan() {
         System.out.println("\n📋 Planul curent:");
 
-        List<Meal> sortedMeals = mealPlan.getSortedMeals();
-        if (sortedMeals.isEmpty()) {
+        if (mealPlan.getMeals().isEmpty()) {
             System.out.println("⚠️ Nu ai adăugat mese.");
             return;
         }
 
-        for (Meal m : sortedMeals) {
+        for (Meal m : mealPlan.getMeals()) {
             System.out.println(m.getMealType() + ": " + m.getRecipe().getName());
         }
 
@@ -289,7 +291,23 @@ public class Menu {
             System.out.print("⚠️ Numele ingredientului nu poate fi gol. Introdu un nume valid: ");
         }
 
-        System.out.print("Calorii/100g: ");
+        System.out.println("Tip ingredient: 1. UnitIngredient | 2. WeightIngredient | 3. VolumeIngredient");
+        String type;
+        while (true) {
+            type = scanner.nextLine().trim();
+            if (type.equals("1") || type.equals("2") || type.equals("3")) break;
+            System.out.print("⚠️ Tip invalid. Alege 1, 2 sau 3: ");
+        }
+
+        String unitLabel = switch (type) {
+            case "1" -> "buc.";
+            case "2" -> "100g";
+            case "3" -> "100ml";
+            default -> "100g";
+        };
+
+
+        System.out.print("Calorii per " + unitLabel + ": ");
         int cal;
         while (true) {
             try {
@@ -301,7 +319,7 @@ public class Menu {
             }
         }
 
-        System.out.print("Proteine/100g: ");
+        System.out.print("Proteine per " + unitLabel + ": ");
         int prot;
         while (true) {
             try {
@@ -313,7 +331,7 @@ public class Menu {
             }
         }
 
-        System.out.print("Grăsimi/100g: ");
+        System.out.print("Grăsimi per " + unitLabel + ": ");
         int fat;
         while (true) {
             try {
@@ -325,7 +343,7 @@ public class Menu {
             }
         }
 
-        System.out.print("Carbo/100g: ");
+        System.out.print("Carbohidrați per " + unitLabel + ": ");
         int carb;
         while (true) {
             try {
@@ -338,9 +356,14 @@ public class Menu {
         }
 
         Macros macros = new Macros(cal, prot, fat, carb);
-        Ingredient ingredient = new Ingredient(name, macros);
-        ingredientList.add(ingredient);
+        Ingredient ingredient = switch (type) {
+            case "1" -> new UnitIngredient(name, macros);
+            case "2" -> new WeightIngredient(name, macros);
+            case "3" -> new VolumeIngredient(name, macros);
+            default -> throw new IllegalStateException("Tip invalid.");
+        };
 
+        ingredientList.add(ingredient);
         System.out.println("✅ Ingredient adăugat.");
     }
 
@@ -375,19 +398,19 @@ public class Menu {
                 }
                 Ingredient chosen = ingredientList.get(index);
 
-                System.out.print("Cantitate (g): ");
-                double grams;
+                System.out.print("Cantitate (" + chosen.getUnit() + "): ");
+                double quantity;
                 while (true) {
                     try {
-                        grams = Double.parseDouble(scanner.nextLine());
-                        if (grams > 0) break;
+                        quantity = Double.parseDouble(scanner.nextLine());
+                        if (quantity > 0) break;
                         System.out.print("⚠️ Cantitatea trebuie să fie un număr pozitiv. Reintrodu: ");
                     } catch (NumberFormatException e) {
                         System.out.print("⚠️ Cantitatea trebuie să fie un număr. Reintrodu: ");
                     }
                 }
 
-                recipe.addIngredient(chosen, grams);
+                recipe.addIngredient(chosen, quantity);
             } catch (NumberFormatException e) {
                 System.out.println("⚠️ Input invalid. Alege un index valid sau 'nou'.");
             }
@@ -437,16 +460,8 @@ public class Menu {
     }
 
     private void showWeightProgress() {
-        List<Double> weightHistory = user.getWeightHistory();
-        if (weightHistory.isEmpty()) {
-            System.out.println("⚠️ Nu există date despre greutate.");
-            return;
-        }
-
-        System.out.println("\n📊 Evoluția greutății:");
-        for (int i = 0; i < weightHistory.size(); i++) {
-            System.out.println("Etapa " + (i + 1) + ": " + weightHistory.get(i) + " kg");
-        }
+        user.printWeightProgress();
     }
+
 
 }

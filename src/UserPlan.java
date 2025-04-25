@@ -18,9 +18,9 @@ public class UserPlan {
         System.out.println("Total calorii în plan: " + totalMacros.getCalories() + " kcal");
 
         if (totalMacros.getCalories() < targetCalories - 100) {
-            System.out.println("⚠️  Sub ținta calorică cu " + (targetCalories - totalMacros.getCalories()) + " kcal");
+            System.out.println("⬇️ Sub ținta calorică cu " + (targetCalories - totalMacros.getCalories()) + " kcal");
         } else if (totalMacros.getCalories() > targetCalories + 100) {
-            System.out.println("⚠️  Peste ținta calorică cu " + (totalMacros.getCalories() - targetCalories) + " kcal");
+            System.out.println("⬆️ Peste ținta calorică cu " + (totalMacros.getCalories() - targetCalories) + " kcal");
         } else {
             System.out.println("✅ Ținta calorică atinsă!");
         }

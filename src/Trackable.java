@@ -5,4 +5,5 @@ public interface Trackable {
     void updateWeight(double newWeight);
     double getCurrentWeight();
     List<Double> getWeightHistory();
+    public void printWeightProgress();
 }

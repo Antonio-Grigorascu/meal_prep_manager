@@ -54,4 +54,17 @@ public class User implements Trackable{
     public double getWeight() { return weight; }
     public double getHeight() { return height; }
     public ActivityLevel getActivityLevel() { return activityLevel; }
+
+    @Override
+    public void printWeightProgress() {
+        System.out.println("📉 Progresul greutății pentru " + name + ":");
+        List<Double> history = getWeightHistory();
+        for (int i = 0; i < history.size(); i++) {
+            double w = history.get(i);
+            int bars = (int) (w / 2); // o bara = 2kg
+            String graph = "█".repeat(bars);
+            System.out.printf("Etapa %2d: %5.1f kg | %s%n", i + 1, w, graph);
+        }
+    }
+
 }

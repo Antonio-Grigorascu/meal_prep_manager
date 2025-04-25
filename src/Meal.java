@@ -1,4 +1,4 @@
-public class Meal {
+public class Meal implements Comparable<Meal> {
     private MealType mealType;
     private Recipe recipe;
 
@@ -34,5 +34,10 @@ public class Meal {
     @Override
     public String toString() {
         return mealType + ": " + recipe;
+    }
+
+    @Override
+    public int compareTo(Meal other) {
+        return this.mealType.ordinal() - other.mealType.ordinal();
     }
 }

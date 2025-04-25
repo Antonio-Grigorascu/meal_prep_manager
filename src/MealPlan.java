@@ -1,12 +1,11 @@
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class MealPlan {
-    private List<Meal> meals;
+    private Set<Meal> meals;
 
     public MealPlan() {
-        this.meals = new ArrayList<>();
+        this.meals = new TreeSet<>();
     }
 
     public void addMeal(Meal meal) {
@@ -21,14 +20,7 @@ public class MealPlan {
         return total;
     }
 
-    public List<Meal> getMeals() {
+    public Set<Meal> getMeals() {
         return meals;
     }
-
-    public List<Meal> getSortedMeals() {
-        List<Meal> sorted = new ArrayList<>(meals);
-        sorted.sort(Comparator.comparingInt(m -> m.getMealType().ordinal()));
-        return sorted;
-    }
-
 }

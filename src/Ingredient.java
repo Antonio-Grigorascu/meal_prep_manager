@@ -1,6 +1,6 @@
 import java.util.Objects;
 
-public class Ingredient{
+public abstract class Ingredient{
     private String name;
     private Macros macros;
 
@@ -36,5 +36,11 @@ public class Ingredient{
     public void setMacros(Macros macros) {
         this.macros = macros;
     }
+
+    public double getNutritionFactor(double quantity) {
+        return quantity / 100.0;
+    }
+
+    public abstract String getUnit();
 
 }
