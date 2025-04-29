@@ -205,13 +205,16 @@ public class Menu {
     }
 
     private void addMeal() {
-        System.out.println("Tipul mesei: 1. Mic dejun | 2. Prânz | 3. Cină | 4. Gustare");
+        System.out.println("Tipul mesei: 0. Ieși | 1. Mic dejun | 2. Prânz | 3. Cină | 4. Gustare");
         String tip;
         MealType type = null;
 
         while (true) {
             tip = scanner.nextLine().trim();
-            if (tip.equals("1")) {
+            if (tip.equals("0")) {
+                System.out.println("❌ Ai ales să nu adaugi nicio masă.");
+                return;
+            } else if (tip.equals("1")) {
                 type = MealType.BREAKFAST;
             } else if (tip.equals("2")) {
                 type = MealType.LUNCH;
@@ -220,7 +223,7 @@ public class Menu {
             } else if (tip.equals("4")) {
                 type = MealType.SNACK;
             } else {
-                System.out.println("⚠️ Opțiune invalidă. Alege 1, 2, 3 sau 4:");
+                System.out.println("⚠️ Opțiune invalidă. Alege 0, 1, 2, 3 sau 4:");
                 continue;
             }
 
@@ -375,7 +378,7 @@ public class Menu {
         };
 
         ingredientList.add(ingredient);
-        System.out.println("✅ models.ingredients.Ingredient adăugat.");
+        System.out.println("✅ Ingredientul adăugat.");
     }
 
     private void createRecipe() {
@@ -473,6 +476,4 @@ public class Menu {
     private void showWeightProgress() {
         user.printWeightProgress();
     }
-
-
 }
