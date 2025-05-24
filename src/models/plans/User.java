@@ -11,7 +11,7 @@ public class User implements Trackable {
     private int age;
     private double weight; // in kg
     private double height; // in cm
-    private String gender; // "male" or "female"
+    private String gender; // "male" sau "female"
     private ActivityLevel activityLevel;
     private List<Double> weightHistory;
 
