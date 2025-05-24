@@ -1,5 +1,6 @@
 package models.mealprep;
 
+import dao.UserDAO;
 import enums.ActivityLevel;
 import enums.MealType;
 import models.ingredients.*;
@@ -181,6 +182,9 @@ public class Menu {
         }
 
         user = new User(name, age, weight, height, gender, activityLevel);
+
+//        UserDAO userDAO = new UserDAO();
+//        userDAO.insertUser(user);
     }
 
     private void chooseGoal() {

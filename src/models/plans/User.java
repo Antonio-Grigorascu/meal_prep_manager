@@ -59,6 +59,7 @@ public class User implements Trackable {
     public double getWeight() { return weight; }
     public double getHeight() { return height; }
     public ActivityLevel getActivityLevel() { return activityLevel; }
+    public String getGender() { return gender; }
 
     @Override
     public void printWeightProgress() {
