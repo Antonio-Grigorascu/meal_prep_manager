@@ -213,7 +213,6 @@ public class Menu {
         user = new User(name, age, weight, height, gender, activityLevel);
 
         UserDAO userDAO = new UserDAO();
-//        userDAO.insertUser(user);
         boolean success = userDAO.insertUser(user);
         if (success) {
             System.out.println("✅ Utilizator creat cu succes! Bun venit, " + user.getName() + "!");
@@ -608,11 +607,22 @@ public class Menu {
                 System.out.print("⚠️ Greutatea trebuie să fie un număr. Reintrodu: ");
             }
         }
-        user.updateWeight(newWeight);
-        System.out.println("✅ Greutatea a fost actualizată! Noua greutate este: " + user.getWeight() + " kg.");
+        UserDAO userDAO = new UserDAO();
+        boolean success = userDAO.updateUserWeight(user.getId(), newWeight);
+
+        if (success) {
+            user.updateWeight(newWeight);
+            System.out.println("✅ Greutatea a fost actualizată! Noua greutate este: " + user.getWeight() + " kg.");
+        } else {
+            System.out.println("❌ Eroare la actualizarea greutății în baza de date!");
+        }
     }
 
     private void showWeightProgress() {
+        UserDAO userDAO = new UserDAO();
+        List<Double> weightHistory = userDAO.getWeightHistory(user.getId());
+
+        user.setWeightHistory(weightHistory);
         user.printWeightProgress();
     }
 }

@@ -64,6 +64,7 @@ public class User implements Trackable {
     public String getGender() { return gender; }
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+    public void setWeightHistory(List<Double> weightHistory) { this.weightHistory = weightHistory; }
 
     @Override
     public void printWeightProgress() {
