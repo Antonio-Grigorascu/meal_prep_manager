@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class User implements Trackable {
+    private int id;
     private String name;
     private int age;
     private double weight; // in kg
@@ -31,6 +32,7 @@ public class User implements Trackable {
         this.weight = newWeight;
         this.weightHistory.add(newWeight);
     }
+
 
     @Override
     public double getCurrentWeight() {
@@ -60,6 +62,8 @@ public class User implements Trackable {
     public double getHeight() { return height; }
     public ActivityLevel getActivityLevel() { return activityLevel; }
     public String getGender() { return gender; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     @Override
     public void printWeightProgress() {

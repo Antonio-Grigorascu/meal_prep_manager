@@ -12,7 +12,7 @@ public class DBInit {
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL UNIQUE,
                 age INT,
                 weight DOUBLE,
                 height DOUBLE,
@@ -32,24 +32,14 @@ public class DBInit {
             )
         """);
 
-            // Table: goal_types
-            stmt.execute("""
-            CREATE TABLE IF NOT EXISTS goal_types (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                goal_name VARCHAR(50) NOT NULL UNIQUE COMMENT 'e.g. Weight Loss, Gain, Maintenance'
-            )
-        """);
-
             // Table: user_goals
             stmt.execute("""
-            CREATE TABLE IF NOT EXISTS user_goals (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                goal_type_id INT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-                FOREIGN KEY (goal_type_id) REFERENCES goal_types(id) ON DELETE CASCADE
-            )
-        """);
+                CREATE TABLE IF NOT EXISTS user_goals (
+                    user_id INT PRIMARY KEY,
+                    goal_type ENUM('WEIGHT_LOSS', 'WEIGHT_GAIN', 'MAINTENANCE') NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                )
+            """);
 
             // Table: ingredients
             stmt.execute("""
@@ -85,22 +75,13 @@ public class DBInit {
             )
         """);
 
-            // Table: meal_types
-            stmt.execute("""
-            CREATE TABLE IF NOT EXISTS meal_types (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                type_name ENUM('BREAKFAST', 'LUNCH', 'DINNER', 'SNACK') NOT NULL UNIQUE
-            )
-        """);
-
-            // Table: meals (was missing!)
+            // Table: meals
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS meals (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 recipe_id INT NOT NULL,
-                meal_type_id INT NOT NULL,
-                FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
-                FOREIGN KEY (meal_type_id) REFERENCES meal_types(id) ON DELETE CASCADE
+                meal_type ENUM('BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'),
+                FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
             )
         """);
 

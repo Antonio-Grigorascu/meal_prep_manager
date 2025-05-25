@@ -3,35 +3,35 @@ package models.ingredients;
 import java.util.Objects;
 
 public class Macros {
-    private int calories;
-    private int proteins;
-    private int fats;
-    private int carbs;
+    private double calories;
+    private double proteins;
+    private double fats;
+    private double carbs;
 
-    public Macros(int calories, int proteins, int fats, int carbs) {
+    public Macros(double calories, double proteins, double fats, double carbs) {
         this.calories = calories;
         this.proteins = proteins;
         this.fats = fats;
         this.carbs = carbs;
     }
 
-    public int getCalories() {
+    public double getCalories() {
         return calories;
     }
 
-    public void setCalories(int calories) {
+    public void setCalories(double calories) {
         this.calories = calories;
     }
 
-    public int getProteins() {
+    public double getProteins() {
         return proteins;
     }
 
-    public void setProteins(int proteins) {
+    public void setProteins(double proteins) {
         this.proteins = proteins;
     }
 
-    public int getFats() {
+    public double getFats() {
         return fats;
     }
 
@@ -39,11 +39,11 @@ public class Macros {
         this.fats = fats;
     }
 
-    public int getCarbs() {
+    public double getCarbs() {
         return carbs;
     }
 
-    public void setCarbs(int carbs) {
+    public void setCarbs(double carbs) {
         this.carbs = carbs;
     }
 
@@ -68,10 +68,10 @@ public class Macros {
     }
 
     public Macros add(Macros macros) {
-        int totalCalories = this.calories + macros.calories;
-        int totalProtein = this.proteins + macros.proteins;
-        int totalFat = this.fats + macros.fats;
-        int totalCarbs = this.carbs + macros.carbs;
+        double totalCalories = this.calories + macros.calories;
+        double totalProtein = this.proteins + macros.proteins;
+        double totalFat = this.fats + macros.fats;
+        double totalCarbs = this.carbs + macros.carbs;
 
         return new Macros(totalCalories, totalProtein, totalFat, totalCarbs);
     }

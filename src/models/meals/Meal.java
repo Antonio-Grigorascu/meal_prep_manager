@@ -32,7 +32,7 @@ public class Meal implements Comparable<Meal> {
         return recipe.getTotalMacros();
     }
 
-    public int getCalories() {
+    public double getCalories() {
         return getMacros().getCalories();
     }
 

@@ -8,6 +8,6 @@ public class Maintenance extends NutritionalGoal {
 
     @Override
     public String getGoalName() {
-        return "models.plans.Maintenance";
+        return "Maintenance";
     }
 }

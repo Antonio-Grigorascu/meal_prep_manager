@@ -7,12 +7,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Recipe {
+    private int id;
     private String name;
     private Map<Ingredient, Double> ingredients;
 
     public Recipe(String name) {
         this.name = name;
         this.ingredients = new HashMap<>();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -60,6 +69,7 @@ public class Recipe {
 
         return new Macros(totalCalories, totalProteins, totalFats, totalCarbs);
     }
+
 
     @Override
     public String toString() {

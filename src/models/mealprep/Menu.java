@@ -1,5 +1,8 @@
 package models.mealprep;
 
+import dao.GoalDAO;
+import dao.IngredientDAO;
+import dao.RecipeDAO;
 import dao.UserDAO;
 import enums.ActivityLevel;
 import enums.MealType;
@@ -11,6 +14,7 @@ import models.plans.*;
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Menu {
 
@@ -39,8 +43,7 @@ public class Menu {
     public void start() {
         System.out.println("🍽️ Bine ai venit la MealPrep Manager!");
 
-        createUser();
-        chooseGoal();
+        handleUserAuth();
 
         boolean running = true;
         while (running) {
@@ -101,7 +104,33 @@ public class Menu {
         scanner.close();
     }
 
-    private void createUser() {
+    private void handleUserAuth() {
+        System.out.println("\n🔐 Autentificare / Înregistrare");
+        System.out.println("1. Autentificare cu utilizator existent");
+        System.out.println("2. Înregistrare utilizator nou");
+        System.out.print("Alege opțiunea: ");
+
+        String option;
+        while (true) {
+            option = scanner.nextLine().trim();
+            if (option.equals("1") || option.equals("2")) break;
+            System.out.print("⚠️ Opțiune invalidă. Alege 1 sau 2: ");
+        }
+
+        if (option.equals("1")) {
+            loginUser();
+        } else {
+            int result = createUser();
+            if (result != 0){
+                System.out.println("⛔ Nu se poate continua fără utilizator valid!");
+                handleUserAuth();
+                return;
+            }
+        }
+        chooseGoal();
+    }
+
+    private int createUser() {
         System.out.print("Nume: ");
         String name;
         while (true) {
@@ -183,11 +212,84 @@ public class Menu {
 
         user = new User(name, age, weight, height, gender, activityLevel);
 
-//        UserDAO userDAO = new UserDAO();
+        UserDAO userDAO = new UserDAO();
 //        userDAO.insertUser(user);
+        boolean success = userDAO.insertUser(user);
+        if (success) {
+            System.out.println("✅ Utilizator creat cu succes! Bun venit, " + user.getName() + "!");
+            return 0;
+        } else {
+            System.out.println("❌ Eroare la crearea utilizatorului!");
+            return -1;
+        }
     }
 
+    private void loginUser() {
+        UserDAO userDAO = new UserDAO();
+        int attempts = 0;
+
+        while (attempts < 3) {
+            System.out.print("\nIntrodu numele utilizatorului: ");
+            String username = scanner.nextLine().trim();
+
+            user = userDAO.getUserByName(username);
+
+            if (user != null) {
+                System.out.println("✅ Autentificare reușită! Bun venit, " + user.getName() + "!");
+                return;
+            }
+
+            attempts++;
+            System.out.println("⚠️ Utilizatorul nu există. Mai ai " + (3 - attempts) + " încercări.");
+        }
+
+        System.out.println("❌ Prea multe încercări eșuate. Crează un utilizator nou.");
+        createUser();
+    }
+
+
     private void chooseGoal() {
+
+        GoalDAO goalDAO = new GoalDAO();
+
+        String existingGoalType = goalDAO.getUserGoalType(user.getId());
+        if (existingGoalType != null) {
+            System.out.println("Ai deja un obiectiv setat: " + existingGoalType);
+            System.out.print("Dorești să îl schimbi? (da/nu): ");
+            String response = scanner.nextLine().trim().toLowerCase();
+            if (response.equals("da") || response.equals("d")) {
+                System.out.println("Obiectiv:\n1. Pierdere în greutate\n2. Creștere în greutate\n3. Mentinere");
+                String goalOption;
+
+                while (true) {
+                    goalOption = scanner.nextLine().trim();
+                    if (goalOption.equals("1")) {
+                        goal = new WeightLoss();
+                        break;
+                    } else if (goalOption.equals("2")) {
+                        goal = new WeightGain();
+                        break;
+                    } else if (goalOption.equals("3")) {
+                        goal = new Maintenance();
+                        break;
+                    } else {
+                        System.out.println("⚠️ Opțiune invalidă. Alege 1, 2 sau 3:");
+                    }
+                }
+                String normalizedGoalName = goal.getGoalName()
+                        .toUpperCase()
+                        .replace(" ", "_");
+
+
+                goalDAO.saveUserGoal(user.getId(),normalizedGoalName);
+                System.out.println("Obiectiv salvat cu succes în baza de date!");
+                return;
+            }
+            else{
+                return;
+            }
+        }
+
         System.out.println("Obiectiv:\n1. Pierdere în greutate\n2. Creștere în greutate\n3. Mentinere");
         String goalOption;
 
@@ -206,6 +308,15 @@ public class Menu {
                 System.out.println("⚠️ Opțiune invalidă. Alege 1, 2 sau 3:");
             }
         }
+
+
+        String normalizedGoalName = goal.getGoalName()
+                .toUpperCase()
+                .replace(" ", "_");
+
+
+        goalDAO.saveUserGoal(user.getId(),normalizedGoalName);
+        System.out.println("Obiectiv salvat cu succes în baza de date!");
     }
 
     private void addMeal() {
@@ -290,7 +401,6 @@ public class Menu {
 
         System.out.println("Total: " + mealPlan.getTotalMacros());
     }
-
 
     private void evaluatePlan() {
         UserPlan userPlan = new UserPlan(user, mealPlan, goal);
@@ -382,7 +492,9 @@ public class Menu {
         };
 
         ingredientList.add(ingredient);
-        System.out.println("✅ Ingredientul adăugat.");
+
+        IngredientDAO ingredientDAO = new IngredientDAO();
+        ingredientDAO.insertIngredient(ingredient);
     }
 
     private void createRecipe() {
@@ -435,29 +547,52 @@ public class Menu {
         }
 
         recipeList.add(recipe);
-        System.out.println("✅ Rețetă salvată.");
+
+        RecipeDAO recipeDAO = new RecipeDAO();
+        recipeDAO.insertRecipe(recipe);
     }
 
     private void viewRecipes() {
-        if (recipeList.isEmpty()) {
-            System.out.println("Nu există rețete.");
+        RecipeDAO recipeDAO = new RecipeDAO();
+        List<Recipe> recipes = recipeDAO.getAllRecipes();
+        
+        if (recipes.isEmpty()) {
+            System.out.println("Nu există rețete în baza de date.");
             return;
         }
-        for (int i = 0; i < recipeList.size(); i++) {
-            System.out.println(i + ": " + recipeList.get(i).getName());
+        
+        System.out.println("\n📋 Rețete din baza de date:");
+        for (Recipe recipe : recipes) {
+            System.out.printf("%d: %s\n", recipe.getId(), recipe.getName());
+            System.out.println("   Ingrediente:");
+            for (Map.Entry<Ingredient, Double> entry : recipe.getIngredients().entrySet()) {
+                Ingredient ing = entry.getKey();
+                System.out.printf("   - %s: %.2f %s\n", 
+                    ing.getName(), 
+                    entry.getValue(), 
+                    ing.getUnit());
+            }
         }
     }
 
     private void viewIngredients() {
-        if (ingredientList.isEmpty()) {
-            System.out.println("⚠️ Nu există ingrediente.");
+        IngredientDAO ingredientDAO = new IngredientDAO();
+        List<Ingredient> ingredients = ingredientDAO.getAllIngredients();
+        
+        if (ingredients.isEmpty()) {
+            System.out.println("⚠️ Nu există ingrediente în baza de date.");
             return;
         }
 
-        System.out.println("\n📋 Lista ingredientelor:");
-        for (int i = 0; i < ingredientList.size(); i++) {
-            Ingredient ingredient = ingredientList.get(i);
-            System.out.println(i + ": " + ingredient);
+        System.out.println("\n📋 Lista ingredientelor din baza de date:");
+        for (Ingredient ingredient : ingredients) {
+            System.out.printf("%d: %s (%s)\n", 
+                ingredient.getId(),
+                ingredient.getName(),
+                ingredient.getClass().getSimpleName());
+            Macros m = ingredient.getMacros();
+            System.out.printf("   Calorii: %.1f | Proteine: %.1fg | Grăsimi: %.1fg | Carbohidrați: %.1fg\n\n",
+                m.getCalories(), m.getProteins(), m.getFats(), m.getCarbs());
         }
     }
 

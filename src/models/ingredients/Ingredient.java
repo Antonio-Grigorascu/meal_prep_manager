@@ -3,6 +3,7 @@ package models.ingredients;
 import java.util.Objects;
 
 public abstract class Ingredient{
+    private int id;
     private String name;
     private Macros macros;
 
@@ -26,6 +27,14 @@ public abstract class Ingredient{
     @Override
     public String toString() {
         return "Ingredient: " + name + " | Macros: [" + macros + "]";
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
