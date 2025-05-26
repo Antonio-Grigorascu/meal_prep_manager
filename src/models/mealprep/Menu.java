@@ -1,9 +1,6 @@
 package models.mealprep;
 
-import dao.GoalDAO;
-import dao.IngredientDAO;
-import dao.RecipeDAO;
-import dao.UserDAO;
+import dao.*;
 import enums.ActivityLevel;
 import enums.MealType;
 import models.ingredients.*;
@@ -11,10 +8,8 @@ import models.meals.Meal;
 import models.meals.Recipe;
 import models.plans.*;
 
-import java.util.Scanner;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 
 public class Menu {
 
@@ -263,59 +258,75 @@ public class Menu {
                 while (true) {
                     goalOption = scanner.nextLine().trim();
                     if (goalOption.equals("1")) {
-                        goal = new WeightLoss();
+                        this.goal = new WeightLoss();
                         break;
                     } else if (goalOption.equals("2")) {
-                        goal = new WeightGain();
+                        this.goal = new WeightGain();
                         break;
                     } else if (goalOption.equals("3")) {
-                        goal = new Maintenance();
+                        this.goal = new Maintenance();
                         break;
                     } else {
                         System.out.println("⚠️ Opțiune invalidă. Alege 1, 2 sau 3:");
                     }
                 }
-                String normalizedGoalName = goal.getGoalName()
+                String normalizedGoalName = this.goal.getGoalName()
                         .toUpperCase()
                         .replace(" ", "_");
-
 
                 goalDAO.saveUserGoal(user.getId(),normalizedGoalName);
                 System.out.println("Obiectiv salvat cu succes în baza de date!");
                 return;
             }
-            else{
-                return;
+            else{       // Daca utilizatorul nu vrea sa schimbe obiectivul, ramane cel din baza de date
+                switch (existingGoalType) {
+                    case "WEIGHT_LOSS":
+                        this.goal = new WeightLoss();
+                        break;
+                    case "WEIGHT_GAIN":
+                        this.goal = new WeightGain();
+                        break;
+                    case "MAINTENANCE":
+                        this.goal = new Maintenance();
+                        break;
+                    default:
+                        System.out.println("⚠️ Tip de obiectiv necunoscut din baza de date: " + existingGoalType + ". Se va cere setarea unuia nou.");
+                        break;
+                }
+                if (this.goal != null) {
+                     System.out.println("Folosești obiectivul existent: " + this.goal.getGoalName());
+                     return;
+                } 
             }
         }
 
+        // Aici se ajunge DOAR daca nu a fost setat un obiectiv
+        System.out.println("Setează-ți obiectivul:");
         System.out.println("Obiectiv:\n1. Pierdere în greutate\n2. Creștere în greutate\n3. Mentinere");
         String goalOption;
 
         while (true) {
             goalOption = scanner.nextLine().trim();
             if (goalOption.equals("1")) {
-                goal = new WeightLoss();
+                this.goal = new WeightLoss();
                 break;
             } else if (goalOption.equals("2")) {
-                goal = new WeightGain();
+                this.goal = new WeightGain();
                 break;
             } else if (goalOption.equals("3")) {
-                goal = new Maintenance();
+                this.goal = new Maintenance();
                 break;
             } else {
                 System.out.println("⚠️ Opțiune invalidă. Alege 1, 2 sau 3:");
             }
         }
 
-
-        String normalizedGoalName = goal.getGoalName()
+        String normalizedGoalName = this.goal.getGoalName()
                 .toUpperCase()
                 .replace(" ", "_");
 
-
         goalDAO.saveUserGoal(user.getId(),normalizedGoalName);
-        System.out.println("Obiectiv salvat cu succes în baza de date!");
+        System.out.println("Obiectiv nou salvat cu succes în baza de date!");
     }
 
     private void addMeal() {
@@ -341,19 +352,27 @@ public class Menu {
                 continue;
             }
 
-            // Variabila final pentru fucntia lambda
             MealType finalType = type;
-
+            // Se verifica daca exista deja o masa de acelasi tip (ex: Nu pot exista doua mese de pranz)
             boolean exists = mealPlan.getMeals().stream().anyMatch(meal -> meal.getMealType() == finalType);
             if (exists) {
-                System.out.println("⚠️ Acest tip de masă există deja în plan. Alege alt tip:");
+                System.out.println("⚠️ Acest tip de masă există deja în planul local. Alege alt tip:");
             } else {
                 break;
             }
         }
+
+        // Se extrag retetele din baza de date
+        RecipeDAO recipeDAOInstance = new RecipeDAO();
+        this.recipeList = recipeDAOInstance.getAllRecipes();
+
         System.out.println("Alege rețetă existentă (index) sau 'nou' pentru a crea una:");
-        for (int i = 0; i < recipeList.size(); i++) {
-            System.out.println(i + ": " + recipeList.get(i).getName());
+        if (this.recipeList.isEmpty()) {
+            System.out.println("(Nu există rețete în baza de date. Trebuie să creați una tastând 'nou'.)");
+        } else {
+            for (int i = 0; i < recipeList.size(); i++) {
+                System.out.println(i + ": " + recipeList.get(i).getName() + " (ID: " + recipeList.get(i).getId() + ")");
+            }
         }
 
         String input;
@@ -362,10 +381,18 @@ public class Menu {
         while (true) {
             input = scanner.nextLine().trim();
             if (input.equalsIgnoreCase("nou")) {
-                createRecipe();
-                selectedRecipe = recipeList.get(recipeList.size() - 1); // ultima
+                createRecipe(); // In create recipe se adauga reteta si in baza de date
+                if (this.recipeList.isEmpty()) {
+                    System.out.println("❌ Crearea rețetei a eșuat sau nicio rețetă nu a fost adăugată. Nu se poate adăuga masa.");
+                    return;
+                }
+                selectedRecipe = this.recipeList.get(this.recipeList.size() - 1); // Ultima reteta adaugata
                 break;
             } else {
+                if (this.recipeList.isEmpty()) {
+                    System.out.println("⚠️ Nu există rețete. Tastați 'nou' pentru a crea una.");
+                    continue;
+                }
                 try {
                     int index = Integer.parseInt(input);
                     if (index >= 0 && index < recipeList.size()) {
@@ -380,29 +407,92 @@ public class Menu {
             }
         }
 
+        if (user == null) {
+            System.out.println("⚠️ Nu sunteți autentificat. Vă rugăm să vă autentificați mai întâi.");
+            return;
+        }
+
         Meal meal = new Meal(type, selectedRecipe);
-        mealPlan.addMeal(meal);
-        System.out.println("✅ Masă adăugată.");
+        MealDAO.insertMeal(meal, user.getId());
+
+        System.out.println("✅ Masă ('" + type + "') cu rețeta '" + selectedRecipe.getName() + "' adăugată în planul utilizatorului.");
     }
 
 
     private void viewPlan() {
-        System.out.println("\n📋 Planul curent:");
+        System.out.println("\n📋 Planul curent al utilizatorului: " + (user != null ? user.getName() : "N/A"));
 
-        if (mealPlan.getMeals().isEmpty()) {
-            System.out.println("⚠️ Nu ai adăugat mese.");
+        if (user == null) {
+            System.out.println("⚠️ Nu sunteți autentificat. Vă rugăm să vă autentificați mai întâi.");
             return;
         }
 
-        for (Meal m : mealPlan.getMeals()) {
-            System.out.println(m.getMealType() + ": " + m.getRecipe().getName());
+        // Lista de mese ale utilizatorului
+        List<Meal> mealsFromDb = MealDAO.getMealsByUserId(user.getId());
+
+        if (mealsFromDb.isEmpty()) {
+            System.out.println("⚠️ Planul este gol. Nu ai adăugat mese.");
+            return;
         }
 
-        System.out.println("Total: " + mealPlan.getTotalMacros());
+        System.out.println("--- Se calculează totalul de macronutrienți ---");
+        double totalCalories = 0;
+        double totalProteins = 0;
+        double totalFats = 0;
+        double totalCarbs = 0;
+
+        for (Meal m : mealsFromDb) {
+            System.out.println("Tipul mesei: " + m.getMealType() +
+                               " - Rețeta: " + m.getRecipe().getName() +
+                               " (ID: " + (m.getRecipe() != null ? m.getRecipe().getId() : "N/A") + ")");
+            
+            Macros recipeMacros = m.getMacros();
+            
+            System.out.println("  -> Macros pentru această masă: " + recipeMacros);
+
+            totalCalories += recipeMacros.getCalories();
+            totalProteins += recipeMacros.getProteins();
+            totalFats += recipeMacros.getFats();
+            totalCarbs += recipeMacros.getCarbs();
+            System.out.println("  -> Running Totals: " +
+                               "\nCalorii=" + String.format("%.1f", totalCalories) +
+                               "\nProteine=" + String.format("%.1f", totalProteins) +
+                               "\nGrăsimi=" + String.format("%.1f", totalFats) +
+                               "\nCarbohidrați=" + String.format("%.1f", totalCarbs));
+            System.out.println("\n");
+        }
+        System.out.println("--- Final ---");
+
+        System.out.println("\nTotaluri pentru planul utilizatorului:");
+        System.out.printf("Calorii: %.1f kcal\n", totalCalories);
+        System.out.printf("Proteine: %.1f g\n", totalProteins);
+        System.out.printf("Grăsimi: %.1f g\n", totalFats);
+        System.out.printf("Carbohidrați: %.1f g\n", totalCarbs);
     }
 
     private void evaluatePlan() {
-        UserPlan userPlan = new UserPlan(user, mealPlan, goal);
+        if (user == null) {
+            System.out.println("⚠️ Nu sunteți autentificat. Vă rugăm să vă autentificați mai întâi.");
+            return;
+        }
+        if (goal == null) {
+            System.out.println("⚠️ Obiectivul nutrițional nu este setat. Vă rugăm să setați un obiectiv mai întâi.");
+            return;
+        }
+
+        // Mesele din baza de date
+        List<Meal> mealsForPlan = MealDAO.getMealsByUserId(user.getId());
+
+        if (this.mealPlan == null) { 
+            this.mealPlan = new MealPlan();
+        }
+        this.mealPlan.setMeals(new HashSet<>(mealsForPlan));
+
+        System.out.println("\n🔎 Evaluare plan pentru utilizatorul: " + user.getName());
+        if (mealsForPlan.isEmpty()) {
+            System.out.println("Planul este gol. Nu sunt mese de evaluat.");
+        }
+        UserPlan userPlan = new UserPlan(user, this.mealPlan, this.goal);
         userPlan.evaluatePlan();
     }
 
@@ -506,10 +596,18 @@ public class Menu {
         }
         Recipe recipe = new Recipe(name);
 
+        // Se incarca ingredientele din baza de date
+        IngredientDAO ingredientDAOInstance = new IngredientDAO();
+        this.ingredientList = ingredientDAOInstance.getAllIngredients();
+
         while (true) {
             System.out.println("Alege ingredient din listă (index) sau scrie 'nou' pentru a adăuga unul nou, 'gata' pentru a încheia:");
-            for (int i = 0; i < ingredientList.size(); i++) {
-                System.out.println(i + ": " + ingredientList.get(i).getName());
+            if (this.ingredientList.isEmpty()) {
+                System.out.println("(Nu există ingrediente predefinite în baza de date. Puteți adăuga unul nou tastând 'nou'.)");
+            } else {
+                for (int i = 0; i < ingredientList.size(); i++) {
+                    System.out.println(i + ": " + ingredientList.get(i).getName() + " (ID: " + ingredientList.get(i).getId() + ")");
+                }
             }
 
             String input = scanner.nextLine().trim();
@@ -526,6 +624,10 @@ public class Menu {
                     continue;
                 }
                 Ingredient chosen = ingredientList.get(index);
+                if (chosen.getId() == 0) {
+                    System.out.println("⚠️ Ingredientul selectat nu are un ID valid. Încercați să-l adăugați din nou.");
+                    continue;
+                }
 
                 System.out.print("Cantitate (" + chosen.getUnit() + "): ");
                 double quantity;
@@ -545,10 +647,11 @@ public class Menu {
             }
         }
 
-        recipeList.add(recipe);
-
         RecipeDAO recipeDAO = new RecipeDAO();
         recipeDAO.insertRecipe(recipe);
+
+        recipeList.add(recipe);
+        System.out.println("✅ Rețetă '" + recipe.getName() + "' adăugată și salvată în baza de date.");
     }
 
     private void viewRecipes() {

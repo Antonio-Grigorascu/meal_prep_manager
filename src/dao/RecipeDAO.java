@@ -24,25 +24,35 @@ public class RecipeDAO {
              PreparedStatement recipeStmt = conn.prepareStatement(recipeSql, Statement.RETURN_GENERATED_KEYS);
              PreparedStatement ingredientStmt = conn.prepareStatement(ingredientSql)) {
             
+            conn.setAutoCommit(false);
+
             recipeStmt.setString(1, recipe.getName());
             recipeStmt.executeUpdate();
             
             ResultSet generatedKeys = recipeStmt.getGeneratedKeys();
             if (!generatedKeys.next()) {
-                throw new SQLException("Creating recipe failed, no ID obtained.");
+                conn.rollback();
+                throw new SQLException("Crearea rețetei a eșuat, nu s-a obținut niciun ID.");
             }
             int recipeId = generatedKeys.getInt(1);
+            recipe.setId(recipeId);
 
-            for (Map.Entry<Ingredient, Double> entry : recipe.getIngredients().entrySet()) {
-                ingredientStmt.setInt(1, recipeId);
-                ingredientStmt.setInt(2, entry.getKey().getId());
-                ingredientStmt.setDouble(3, entry.getValue());
-                ingredientStmt.addBatch();
+            if (recipe.getIngredients() != null && !recipe.getIngredients().isEmpty()) {
+                for (Map.Entry<Ingredient, Double> entry : recipe.getIngredients().entrySet()) {
+                    if (entry.getKey().getId() == 0) {
+                        System.err.println("Avertisment: Ingredientul " + entry.getKey().getName() + " nu are ID. Nu se poate adăuga în rețetă.");
+                        continue;
+                    }
+                    ingredientStmt.setInt(1, recipeId);
+                    ingredientStmt.setInt(2, entry.getKey().getId());    // ingredient
+                    ingredientStmt.setDouble(3, entry.getValue());       // cantitate
+                    ingredientStmt.addBatch();
+                }
+                ingredientStmt.executeBatch();
             }
             
-            ingredientStmt.executeBatch();
-
-            System.out.println("✅ Rețetă salvată.");
+            conn.commit();
+            System.out.println("✅ Rețetă salvată cu ID: " + recipeId);
             
         } catch (SQLException e) {
             e.printStackTrace();
@@ -61,7 +71,7 @@ public class RecipeDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             ResultSet rs = pstmt.executeQuery();
-            Map<Integer, Recipe> recipeMap = new HashMap<>();
+            Map<Integer, Recipe> recipeMap = new HashMap<>();  // id: Rețetă
 
             while (rs.next()) {
                 int recipeId = rs.getInt("recipe_id");
@@ -73,7 +83,7 @@ public class RecipeDAO {
                     recipeMap.put(recipeId, recipe);
                 }
 
-                if (!rs.wasNull()) { // Daca exista ingrediente
+                if (rs.getObject("id") != null) {
                     Ingredient ingredient = createIngredientFromResultSet(rs);
                     double quantity = rs.getDouble("quantity");
                     recipe.addIngredient(ingredient, quantity);
@@ -100,7 +110,6 @@ public class RecipeDAO {
             rs.getDouble("carbs")
         );
 
-        // tipul de ingredient corespunzator
         Ingredient ingredient = switch (baseUnit) {
             case "piece" -> new UnitIngredient(name, macros);
             case "g" -> new WeightIngredient(name, macros);
@@ -108,9 +117,44 @@ public class RecipeDAO {
             default -> throw new IllegalArgumentException("Unsupported unit type: " + baseUnit);
         };
 
-        // setez ID-ul din baza de date
         ingredient.setId(id);
 
         return ingredient;
+    }
+
+    public Recipe getRecipeById(int recipeId) {
+        Recipe recipe = null;
+        String sql = "SELECT r.id AS recipe_id, r.name AS recipe_name, " +
+                     "ri.ingredient_id, ri.quantity, i.* " +  // reteta + ingredient
+                     "FROM recipes r " +
+                     "LEFT JOIN recipe_ingredients ri ON r.id = ri.recipe_id " +
+                     "LEFT JOIN ingredients i ON ri.ingredient_id = i.id " +
+                     "WHERE r.id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, recipeId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                if (recipe == null) {
+                    recipe = new Recipe(rs.getString("recipe_name"));
+                    recipe.setId(rs.getInt("recipe_id"));
+                }
+
+                // Verific daca exista ingredient asociat cu reteta
+                if (rs.getObject("id") != null) {
+                    Ingredient ingredient = createIngredientFromResultSet(rs);
+                    double quantity = rs.getDouble("quantity");
+                    if (recipe != null) {
+                        recipe.addIngredient(ingredient, quantity);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return recipe;
     }
 }

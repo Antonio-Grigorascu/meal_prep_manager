@@ -28,4 +28,6 @@ public class MealPlan {
     public Set<Meal> getMeals() {
         return meals;
     }
+
+    public void setMeals(Set<Meal> meals) { this.meals = meals; }
 }

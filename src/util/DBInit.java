@@ -8,7 +8,7 @@ public class DBInit {
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement()) {
 
-            // Table: users
+            // Tabel: users
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,7 +21,7 @@ public class DBInit {
             )
         """);
 
-            // Table: weight_history
+            // Tabel: weight_history
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS weight_history (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -32,7 +32,7 @@ public class DBInit {
             )
         """);
 
-            // Table: user_goals
+            // Tabel: user_goals
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS user_goals (
                     user_id INT PRIMARY KEY,
@@ -41,7 +41,7 @@ public class DBInit {
                 )
             """);
 
-            // Table: ingredients
+            // Tabel: ingredients
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS ingredients (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,7 +55,7 @@ public class DBInit {
             )
         """);
 
-            // Table: recipes
+            // Tabel: recipes
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS recipes (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,7 +63,7 @@ public class DBInit {
             )
         """);
 
-            // Table: recipe_ingredients
+            // Tabel: recipe_ingredients
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS recipe_ingredients (
                 recipe_id INT NOT NULL,
@@ -75,7 +75,7 @@ public class DBInit {
             )
         """);
 
-            // Table: meals
+            // Tabel: meals
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS meals (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,25 +85,14 @@ public class DBInit {
             )
         """);
 
-            // Table: user_meal_plans
-            stmt.execute("""
-            CREATE TABLE IF NOT EXISTS user_meal_plans (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                plan_date DATE NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        """);
-
-            // Table: user_meal_plan_entries
+            // Tabel: user_meal_plan_entries
             stmt.execute("""
             CREATE TABLE IF NOT EXISTS user_meal_plan_entries (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_meal_plan_id INT NOT NULL,
+                user_id INT NOT NULL,
                 meal_id INT NOT NULL,
-                FOREIGN KEY (user_meal_plan_id) REFERENCES user_meal_plans(id) ON DELETE CASCADE,
-                FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE,
-                UNIQUE (user_meal_plan_id, meal_id) COMMENT 'Only one instance of a meal per plan'
+                PRIMARY KEY (user_id, meal_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                FOREIGN KEY (meal_id) REFERENCES meals(id) ON DELETE CASCADE ON UPDATE CASCADE
             )
         """);
 

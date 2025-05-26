@@ -1,9 +1,11 @@
 package models.meals;
 
+import dao.RecipeDAO;
 import enums.MealType;
 import models.ingredients.Macros;
 
 public class Meal implements Comparable<Meal> {
+    private int id;
     private MealType mealType;
     private Recipe recipe;
 
@@ -29,11 +31,28 @@ public class Meal implements Comparable<Meal> {
     }
 
     public Macros getMacros() {
-        return recipe.getTotalMacros();
+        if (this.recipe != null && (this.recipe.getIngredients() == null || this.recipe.getIngredients().isEmpty()) && this.recipe.getId() != 0) {
+            RecipeDAO recipeDAO = new RecipeDAO();
+            Recipe fullRecipe = recipeDAO.getRecipeById(this.recipe.getId());
+            if (fullRecipe != null) {
+                this.recipe = fullRecipe;
+            } else {
+                return new Macros(0,0,0,0);
+            }
+        }
+        return this.recipe != null ? this.recipe.getTotalMacros() : new Macros(0,0,0,0);
     }
 
     public double getCalories() {
         return getMacros().getCalories();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override

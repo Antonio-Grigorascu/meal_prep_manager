@@ -78,11 +78,13 @@ public class IngredientDAO {
             rs.getDouble("carbs")
         );
 
-        return switch (baseUnit) {
+        Ingredient ingredient = switch (baseUnit) {
             case "piece" -> new UnitIngredient(name, macros);
             case "g" -> new WeightIngredient(name, macros);
             case "ml" -> new VolumeIngredient(name, macros);
-            default -> throw new IllegalArgumentException("Unsupported unit type");
+            default -> throw new IllegalArgumentException("Unitate de masura invalida: " + baseUnit);
         };
+        ingredient.setId(id);
+        return ingredient;
     }
 }
