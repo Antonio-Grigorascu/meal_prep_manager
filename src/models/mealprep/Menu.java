@@ -7,8 +7,8 @@ import models.ingredients.*;
 import models.meals.Meal;
 import models.meals.Recipe;
 import models.plans.*;
+import services.*;
 
-import java.time.LocalDate;
 import java.util.*;
 
 public class Menu {
@@ -54,6 +54,14 @@ public class Menu {
             System.out.println("7. Vezi toate ingredientele");
             System.out.println("8. Actualizează greutatea");
             System.out.println("9. Vezi progresul greutății");
+            System.out.println("10. Actualizează utilizatorul curent");
+            System.out.println("11. Șterge utilizatorul curent");
+            System.out.println("12. Actualizează un ingredient");
+            System.out.println("13. Șterge un ingredient");
+            System.out.println("14. Actualizează o rețetă");
+            System.out.println("15. Șterge o rețetă");
+            System.out.println("16. Actualizează o masă");
+            System.out.println("17. Șterge o masă");
             System.out.println("0. Ieși");
             System.out.print("Alege opțiunea: ");
 
@@ -86,6 +94,30 @@ public class Menu {
                     break;
                 case "9":
                     showWeightProgress();
+                    break;
+                case "10":
+                    updateUser();
+                    break;
+                case "11":
+                    deleteUser();
+                    break;
+                case "12":
+                    updateIngredient();
+                    break;
+                case "13":
+                    deleteIngredient();
+                    break;
+                case "14":
+                    updateRecipe();
+                    break;
+                case "15":
+                    deleteRecipe();
+                    break;
+                case "16":
+                    updateMeal();
+                    break;
+                case "17":
+                    deleteMeal();
                     break;
                 case "0":
                     running = false;
@@ -207,8 +239,10 @@ public class Menu {
 
         user = new User(name, age, weight, height, gender, activityLevel);
 
-        UserDAO userDAO = new UserDAO();
-        boolean success = userDAO.insertUser(user);
+        AuditService.getInstance().logAction("createUser");
+
+        UserService userService = services.UserService.getInstance();
+        boolean success = userService.insertUser(user);
         if (success) {
             System.out.println("✅ Utilizator creat cu succes! Bun venit, " + user.getName() + "!");
             return 0;
@@ -219,17 +253,18 @@ public class Menu {
     }
 
     private void loginUser() {
-        UserDAO userDAO = new UserDAO();
+        UserService userService = services.UserService.getInstance();
         int attempts = 0;
 
         while (attempts < 3) {
             System.out.print("\nIntrodu numele utilizatorului: ");
             String username = scanner.nextLine().trim();
 
-            user = userDAO.getUserByName(username);
+            user = userService.getUserByName(username);
 
             if (user != null) {
                 System.out.println("✅ Autentificare reușită! Bun venit, " + user.getName() + "!");
+                AuditService.getInstance().logAction("loginUser");
                 return;
             }
 
@@ -243,6 +278,7 @@ public class Menu {
 
 
     private void chooseGoal() {
+        AuditService.getInstance().logAction("chooseGoal");
 
         GoalDAO goalDAO = new GoalDAO();
 
@@ -363,8 +399,8 @@ public class Menu {
         }
 
         // Se extrag retetele din baza de date
-        RecipeDAO recipeDAOInstance = new RecipeDAO();
-        this.recipeList = recipeDAOInstance.getAllRecipes();
+        RecipeService recipeService = RecipeService.getInstance();
+        this.recipeList = recipeService.getAllRecipes();
 
         System.out.println("Alege rețetă existentă (index) sau 'nou' pentru a crea una:");
         if (this.recipeList.isEmpty()) {
@@ -413,13 +449,19 @@ public class Menu {
         }
 
         Meal meal = new Meal(type, selectedRecipe);
-        MealDAO.insertMeal(meal, user.getId());
+
+        MealService mealService = MealService.getInstance();
+        mealService.insertMeal(meal, user.getId());
+
+        AuditService.getInstance().logAction("addMeal");
 
         System.out.println("✅ Masă ('" + type + "') cu rețeta '" + selectedRecipe.getName() + "' adăugată în planul utilizatorului.");
     }
 
 
     private void viewPlan() {
+        AuditService.getInstance().logAction("viewPlan");
+
         System.out.println("\n📋 Planul curent al utilizatorului: " + (user != null ? user.getName() : "N/A"));
 
         if (user == null) {
@@ -428,7 +470,9 @@ public class Menu {
         }
 
         // Lista de mese ale utilizatorului
-        List<Meal> mealsFromDb = MealDAO.getMealsByUserId(user.getId());
+
+        MealService mealService = MealService.getInstance();
+        List<Meal> mealsFromDb = mealService.getMealsByUserId(user.getId());
 
         if (mealsFromDb.isEmpty()) {
             System.out.println("⚠️ Planul este gol. Nu ai adăugat mese.");
@@ -481,7 +525,8 @@ public class Menu {
         }
 
         // Mesele din baza de date
-        List<Meal> mealsForPlan = MealDAO.getMealsByUserId(user.getId());
+        MealService mealService = MealService.getInstance();
+        List<Meal> mealsForPlan = mealService.getMealsByUserId(user.getId());
 
         if (this.mealPlan == null) { 
             this.mealPlan = new MealPlan();
@@ -494,6 +539,8 @@ public class Menu {
         }
         UserPlan userPlan = new UserPlan(user, this.mealPlan, this.goal);
         userPlan.evaluatePlan();
+
+        AuditService.getInstance().logAction("evaluatePlan");
     }
 
     private void addIngredient() {
@@ -582,8 +629,10 @@ public class Menu {
 
         ingredientList.add(ingredient);
 
-        IngredientDAO ingredientDAO = new IngredientDAO();
-        ingredientDAO.insertIngredient(ingredient);
+        IngredientService ingredientService = IngredientService.getInstance();
+        ingredientService.insertIngredient(ingredient);
+
+        AuditService.getInstance().logAction("addIngredient");
     }
 
     private void createRecipe() {
@@ -597,8 +646,8 @@ public class Menu {
         Recipe recipe = new Recipe(name);
 
         // Se incarca ingredientele din baza de date
-        IngredientDAO ingredientDAOInstance = new IngredientDAO();
-        this.ingredientList = ingredientDAOInstance.getAllIngredients();
+        IngredientService ingredientService = IngredientService.getInstance();
+        this.ingredientList = ingredientService.getAllIngredients();
 
         while (true) {
             System.out.println("Alege ingredient din listă (index) sau scrie 'nou' pentru a adăuga unul nou, 'gata' pentru a încheia:");
@@ -647,16 +696,18 @@ public class Menu {
             }
         }
 
-        RecipeDAO recipeDAO = new RecipeDAO();
-        recipeDAO.insertRecipe(recipe);
+        RecipeService recipeService = RecipeService.getInstance();
+        recipeService.insertRecipe(recipe);
 
         recipeList.add(recipe);
         System.out.println("✅ Rețetă '" + recipe.getName() + "' adăugată și salvată în baza de date.");
+
+        AuditService.getInstance().logAction("createRecipe");
     }
 
     private void viewRecipes() {
-        RecipeDAO recipeDAO = new RecipeDAO();
-        List<Recipe> recipes = recipeDAO.getAllRecipes();
+        RecipeService recipeService = RecipeService.getInstance();
+        List<Recipe> recipes = recipeService.getAllRecipes();
         
         if (recipes.isEmpty()) {
             System.out.println("Nu există rețete în baza de date.");
@@ -675,11 +726,13 @@ public class Menu {
                     ing.getUnit());
             }
         }
+
+        AuditService.getInstance().logAction("viewRecipes");
     }
 
     private void viewIngredients() {
-        IngredientDAO ingredientDAO = new IngredientDAO();
-        List<Ingredient> ingredients = ingredientDAO.getAllIngredients();
+        IngredientService ingredientService = IngredientService.getInstance();
+        List<Ingredient> ingredients = ingredientService.getAllIngredients();
         
         if (ingredients.isEmpty()) {
             System.out.println("⚠️ Nu există ingrediente în baza de date.");
@@ -696,9 +749,12 @@ public class Menu {
             System.out.printf("   Calorii: %.1f | Proteine: %.1fg | Grăsimi: %.1fg | Carbohidrați: %.1fg\n\n",
                 m.getCalories(), m.getProteins(), m.getFats(), m.getCarbs());
         }
+
+        AuditService.getInstance().logAction("viewIngredient");
     }
 
     private void updateUserWeight() {
+        AuditService.getInstance().logAction("updateUserWeight");
         System.out.print("Introduceți noua greutate (kg): ");
         double newWeight;
         while (true) {
@@ -710,8 +766,8 @@ public class Menu {
                 System.out.print("⚠️ Greutatea trebuie să fie un număr. Reintrodu: ");
             }
         }
-        UserDAO userDAO = new UserDAO();
-        boolean success = userDAO.updateUserWeight(user.getId(), newWeight);
+        UserService userService = services.UserService.getInstance();
+        boolean success = userService.updateUserWeight(user.getId(), newWeight);
 
         if (success) {
             user.updateWeight(newWeight);
@@ -722,10 +778,456 @@ public class Menu {
     }
 
     private void showWeightProgress() {
-        UserDAO userDAO = new UserDAO();
-        List<Double> weightHistory = userDAO.getWeightHistory(user.getId());
+        UserService userService = services.UserService.getInstance();
+        List<Double> weightHistory = userService.getWeightHistory(user.getId());
 
         user.setWeightHistory(weightHistory);
         user.printWeightProgress();
+
+        AuditService.getInstance().logAction("showWeightProgress");
+    }
+
+    private void deleteUser(){
+        System.out.println("Ești sigur că vrei să ștergi utilizatorul curent?");
+        String response = scanner.nextLine().trim().toLowerCase();
+        if (response.equals("da") || response.equals("d")) {
+            UserService userService = services.UserService.getInstance();
+            userService.deleteUser(this.user.getId());
+
+            System.out.println("👋 La revedere!");
+            System.exit(0);
+        }
+        else{
+            System.out.println("Utilizatorul nu a fost șters!");
+        }
+
+        AuditService.getInstance().logAction("deleteUser");
+
+    }
+
+    private void updateUser() {
+        System.out.println("Ești sigur că vrei să actualizezi utilizatorul curent?");
+        String response = scanner.nextLine().trim().toLowerCase();
+        if (response.equals("da") || response.equals("d")) {
+            System.out.print("Introduceți noul nume: ");
+            String newName = scanner.nextLine().trim();
+
+            System.out.print("Introduceți noua vârstă: ");
+            int newAge;
+            while (true) {
+                try {
+                    newAge = Integer.parseInt(scanner.nextLine().trim());
+                    if (newAge > 0) break;
+                    System.out.print("⚠️ Vârsta trebuie să fie un număr pozitiv. Reintrodu: ");
+                } catch (NumberFormatException e) {
+                    System.out.print("⚠️ Vârsta trebuie să fie un număr. Reintrodu: ");
+                }
+            }
+
+            System.out.print("Introduceți noua greutate (kg): ");
+            double newWeight;
+            while (true) {
+                try {
+                    newWeight = Double.parseDouble(scanner.nextLine().trim());
+                    if (newWeight > 0) break;
+                    System.out.print("⚠️ Greutatea trebuie să fie un număr pozitiv. Reintrodu: ");
+                } catch (NumberFormatException e) {
+                    System.out.print("⚠️ Greutatea trebuie să fie un număr. Reintrodu: ");
+                }
+            }
+
+            System.out.print("Introduceți noua înălțime (cm): ");
+            double newHeight;
+            while (true) {
+                try {
+                    newHeight = Double.parseDouble(scanner.nextLine().trim());
+                    if (newHeight > 0) break;
+                    System.out.print("⚠️ Înălțimea trebuie să fie un număr pozitiv. Reintrodu: ");
+                } catch (NumberFormatException e) {
+                    System.out.print("⚠️ Înălțimea trebuie să fie un număr. Reintrodu: ");
+                }
+            }
+
+            System.out.print("Introduceți noul sex (male/female): ");
+            String newGender;
+            while (true) {
+                newGender = scanner.nextLine().trim().toLowerCase();
+                if (newGender.equals("male") || newGender.equals("female")) break;
+                System.out.print("⚠️ Sexul trebuie să fie 'male' sau 'female'. Reintrodu: ");
+            }
+
+            System.out.println("Nivel de activitate:\n1. Sedentar\n2. Ușor activ\n3. Activ moderat\n4. Foarte activ\n5. Extra activ");
+            ActivityLevel newActivityLevel;
+            while (true) {
+                String level = scanner.nextLine().trim();
+                switch (level) {
+                    case "1":
+                        newActivityLevel = ActivityLevel.SEDENTARY;
+                        break;
+                    case "2":
+                        newActivityLevel = ActivityLevel.LIGHTLY_ACTIVE;
+                        break;
+                    case "3":
+                        newActivityLevel = ActivityLevel.MODERATELY_ACTIVE;
+                        break;
+                    case "4":
+                        newActivityLevel = ActivityLevel.VERY_ACTIVE;
+                        break;
+                    case "5":
+                        newActivityLevel = ActivityLevel.EXTRA_ACTIVE;
+                        break;
+                    default:
+                        System.out.print("⚠️ Nivel invalid. Alege un nivel între 1 și 5: ");
+                        continue;
+                }
+                break;
+            }
+
+            user.setName(newName);
+            user.setAge(newAge);
+            user.setWeight(newWeight);
+            user.setHeight(newHeight);
+            user.setGender(newGender);
+            user.setActivityLevel(newActivityLevel);
+
+            UserService userService = services.UserService.getInstance();
+            boolean success = userService.updateUser(user);
+
+            if (success) {
+                System.out.println("✅ Utilizatorul a fost actualizat cu succes!");
+            } else {
+                System.out.println("❌ Eroare la actualizarea utilizatorului!");
+            }
+        } else {
+            System.out.println("Utilizatorul nu a fost actualizat!");
+        }
+
+        AuditService.getInstance().logAction("updateUser");
+    }
+
+    private void updateIngredient() {
+        IngredientService ingredientService = IngredientService.getInstance();
+        List<Ingredient> ingredients = ingredientService.getAllIngredients();
+
+        if (ingredients.isEmpty()) {
+            System.out.println("⚠️ Nu există ingrediente în baza de date.");
+            return;
+        }
+
+        System.out.println("\n📋 Ingrediente disponibile:");
+        for (Ingredient ingredient : ingredients) {
+            System.out.printf("%d: %s (%s)\n", ingredient.getId(), ingredient.getName(), ingredient.getClass().getSimpleName());
+        }
+
+        System.out.print("Introduceți ID-ul ingredientului pe care doriți să-l actualizați: ");
+        int id;
+        while (true) {
+            try {
+                id = Integer.parseInt(scanner.nextLine().trim());
+                final int finalId = id;
+                if (ingredients.stream().anyMatch(ing -> ing.getId() == finalId)) break;
+                System.out.print("⚠️ ID invalid. Introduceți un ID valid: ");
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ ID-ul trebuie să fie un număr. Reintroduceți: ");
+            }
+        }
+        final int finalId = id;
+        Ingredient ingredientToUpdate = ingredients.stream().filter(ing -> ing.getId() == finalId).findFirst().orElse(null);
+        if (ingredientToUpdate == null) {
+            System.out.println("⚠️ Ingredientul cu ID-ul specificat nu a fost găsit.");
+            return;
+        }
+
+        System.out.print("Introduceți noul nume: ");
+        String newName = scanner.nextLine().trim();
+
+        System.out.print("Introduceți noile calorii: ");
+        double newCalories = getPositiveDoubleInput("Caloriile trebuie să fie un număr pozitiv. Reintroduceți: ");
+
+        System.out.print("Introduceți noile proteine: ");
+        double newProteins = getPositiveDoubleInput("Proteinele trebuie să fie un număr pozitiv. Reintroduceți: ");
+
+        System.out.print("Introduceți noile grăsimi: ");
+        double newFats = getPositiveDoubleInput("Grăsimile trebuie să fie un număr pozitiv. Reintroduceți: ");
+
+        System.out.print("Introduceți noii carbohidrați: ");
+        double newCarbs = getPositiveDoubleInput("Carbohidrații trebuie să fie un număr pozitiv. Reintroduceți: ");
+
+        ingredientToUpdate.setName(newName);
+        ingredientToUpdate.getMacros().setCalories(newCalories);
+        ingredientToUpdate.getMacros().setProteins(newProteins);
+        ingredientToUpdate.getMacros().setFats(newFats);
+        ingredientToUpdate.getMacros().setCarbs(newCarbs);
+
+        ingredientService.updateIngredient(ingredientToUpdate);
+        System.out.println("✅ Ingredientul a fost actualizat cu succes!");
+
+        AuditService.getInstance().logAction("updateIngredient");
+    }
+
+    private void deleteIngredient() {
+        IngredientService ingredientService = IngredientService.getInstance();
+        List<Ingredient> ingredients = ingredientService.getAllIngredients();
+
+        if (ingredients.isEmpty()) {
+            System.out.println("⚠️ Nu există ingrediente în baza de date.");
+            return;
+        }
+
+        System.out.println("\n📋 Ingrediente disponibile:");
+        for (Ingredient ingredient : ingredients) {
+            System.out.printf("%d: %s (%s)\n", ingredient.getId(), ingredient.getName(), ingredient.getClass().getSimpleName());
+        }
+
+        System.out.print("Introduceți ID-ul ingredientului pe care doriți să-l ștergeți: ");
+        int id;
+        while (true) {
+            try {
+                id = Integer.parseInt(scanner.nextLine().trim());
+                final int finalId = id;
+                if (ingredients.stream().anyMatch(ing -> ing.getId() == finalId)) break;
+                System.out.print("⚠️ ID invalid. Introduceți un ID valid: ");
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ ID-ul trebuie să fie un număr. Reintroduceți: ");
+            }
+        }
+
+        ingredientService.deleteIngredient(id);
+        System.out.println("✅ Ingredientul a fost șters cu succes!");
+
+        AuditService.getInstance().logAction("deleteIngredient");
+    }
+
+    private double getPositiveDoubleInput(String errorMessage) {
+        while (true) {
+            try {
+                double value = Double.parseDouble(scanner.nextLine().trim());
+                if (value > 0) return value;
+                System.out.print("⚠️ " + errorMessage);
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ " + errorMessage);
+            }
+        }
+    }
+
+    private void updateRecipe() {
+        RecipeService recipeService = RecipeService.getInstance();
+        List<Recipe> recipes = recipeService.getAllRecipes();
+
+        if (recipes.isEmpty()) {
+            System.out.println("⚠️ Nu există rețete în baza de date.");
+            return;
+        }
+
+        System.out.println("\n📋 Rețete disponibile:");
+        for (Recipe recipe : recipes) {
+            System.out.printf("%d: %s\n", recipe.getId(), recipe.getName());
+        }
+
+        System.out.print("Introduceți ID-ul rețetei pe care doriți să o actualizați: ");
+        int id;
+        while (true) {
+            try {
+                id = Integer.parseInt(scanner.nextLine().trim());
+                final int finalId = id;
+                if (recipes.stream().anyMatch(r -> r.getId() == finalId)) break;
+                System.out.print("⚠️ ID invalid. Introduceți un ID valid: ");
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ ID-ul trebuie să fie un număr. Reintroduceți: ");
+            }
+        }
+        final int finalId = id;
+        Recipe recipeToUpdate = recipes.stream().filter(r -> r.getId() == finalId).findFirst().orElse(null);
+        if (recipeToUpdate == null) {
+            System.out.println("⚠️ Rețeta cu ID-ul specificat nu a fost găsită.");
+            return;
+        }
+
+        System.out.print("Introduceți noul nume al rețetei: ");
+        String newName = scanner.nextLine().trim();
+        recipeToUpdate.setName(newName);
+
+        System.out.println("Actualizați ingredientele rețetei. Tastați 'gata' pentru a încheia.");
+        recipeToUpdate.getIngredients().clear();
+
+        while (true) {
+            System.out.println("Alegeți un ingredient din listă (index) sau 'nou' pentru a adăuga unul nou:");
+            viewIngredients(); // Displays available ingredients
+            String input = scanner.nextLine().trim();
+            if (input.equalsIgnoreCase("gata")) break;
+            if (input.equalsIgnoreCase("nou")) {
+                addIngredient();
+                continue;
+            }
+
+            try {
+                int index = Integer.parseInt(input);
+                Ingredient chosen = ingredientList.get(index);
+                System.out.print("Introduceți cantitatea: ");
+                double quantity = getPositiveDoubleInput("Cantitatea trebuie să fie un număr pozitiv. Reintroduceți: ");
+                recipeToUpdate.addIngredient(chosen, quantity);
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                System.out.println("⚠️ Input invalid. Încercați din nou.");
+            }
+        }
+
+        recipeService.updateRecipe(recipeToUpdate);
+        System.out.println("✅ Rețeta a fost actualizată cu succes!");
+
+        AuditService.getInstance().logAction("updateRecipe");
+    }
+
+    private void deleteRecipe() {
+        RecipeService recipeService = RecipeService.getInstance();
+        List<Recipe> recipes = recipeService.getAllRecipes();
+
+        if (recipes.isEmpty()) {
+            System.out.println("⚠️ Nu există rețete în baza de date.");
+            return;
+        }
+
+        System.out.println("\n📋 Rețete disponibile:");
+        for (Recipe recipe : recipes) {
+            System.out.printf("%d: %s\n", recipe.getId(), recipe.getName());
+        }
+
+        System.out.print("Introduceți ID-ul rețetei pe care doriți să o ștergeți: ");
+        int id;
+        while (true) {
+            try {
+                id = Integer.parseInt(scanner.nextLine().trim());
+                final int finalId = id;
+                if (recipes.stream().anyMatch(r -> r.getId() == finalId)) break;
+                System.out.print("⚠️ ID invalid. Introduceți un ID valid: ");
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ ID-ul trebuie să fie un număr. Reintroduceți: ");
+            }
+        }
+
+        recipeService.deleteRecipe(id);
+        System.out.println("✅ Rețeta a fost ștearsă cu succes!");
+
+        AuditService.getInstance().logAction("deleteRecipe");
+    }
+
+    private void updateMeal() {
+        MealService mealService = MealService.getInstance();
+        List<Meal> meals = mealService.getMealsByUserId(user.getId());
+
+        if (meals.isEmpty()) {
+            System.out.println("⚠️ Nu există mese în baza de date.");
+            return;
+        }
+
+        System.out.println("\n📋 Mese disponibile:");
+        for (Meal meal : meals) {
+            System.out.printf("%d: %s - Rețetă: %s\n", meal.getId(), meal.getMealType(), meal.getRecipe().getName());
+        }
+
+        System.out.print("Introduceți ID-ul mesei pe care doriți să o actualizați: ");
+        int id;
+        while (true) {
+            try {
+                id = Integer.parseInt(scanner.nextLine().trim());
+                final int finalId = id;
+                if (meals.stream().anyMatch(m -> m.getId() == finalId)) break;
+                System.out.print("⚠️ ID invalid. Introduceți un ID valid: ");
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ ID-ul trebuie să fie un număr. Reintroduceți: ");
+            }
+        }
+        final int finalId = id;
+        Meal mealToUpdate = meals.stream().filter(m -> m.getId() == finalId).findFirst().orElse(null);
+        if (mealToUpdate == null) {
+            System.out.println("⚠️ Masa cu ID-ul specificat nu a fost găsită.");
+            return;
+        }
+
+        System.out.println("Alegeți noul tip de masă: 1. Mic dejun | 2. Prânz | 3. Cină | 4. Gustare");
+        MealType newType = null;
+        while (true) {
+            String input = scanner.nextLine().trim();
+            switch (input) {
+                case "1" -> newType = MealType.BREAKFAST;
+                case "2" -> newType = MealType.LUNCH;
+                case "3" -> newType = MealType.DINNER;
+                case "4" -> newType = MealType.SNACK;
+                default -> {
+                    System.out.print("⚠️ Opțiune invalidă. Alegeți 1, 2, 3 sau 4: ");
+                    continue;
+                }
+            }
+            break;
+        }
+        mealToUpdate.setMealType(newType);
+
+        System.out.println("Alegeți o rețetă existentă (index) sau 'nou' pentru a crea una:");
+        RecipeService recipeService = RecipeService.getInstance();
+        this.recipeList = recipeService.getAllRecipes();
+
+        if (this.recipeList.isEmpty()) {
+            System.out.println("(Nu există rețete în baza de date. Trebuie să creați una tastând 'nou'.)");
+        } else {
+            for (int i = 0; i < recipeList.size(); i++) {
+                System.out.println(i + ": " + recipeList.get(i).getName() + " (ID: " + recipeList.get(i).getId() + ")");
+            }
+        }
+
+        Recipe selectedRecipe = null;
+        while (true) {
+            String input = scanner.nextLine().trim();
+            if (input.equalsIgnoreCase("nou")) {
+                createRecipe();
+                selectedRecipe = this.recipeList.get(this.recipeList.size() - 1);
+                break;
+            } else {
+                try {
+                    int index = Integer.parseInt(input);
+                    selectedRecipe = this.recipeList.get(index);
+                    break;
+                } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                    System.out.println("⚠️ Input invalid. Încercați din nou.");
+                }
+            }
+        }
+        mealToUpdate.setRecipe(selectedRecipe);
+
+        mealService.updateMeal(mealToUpdate);
+        System.out.println("✅ Masa a fost actualizată cu succes!");
+
+        AuditService.getInstance().logAction("updateMeal");
+    }
+
+    private void deleteMeal() {
+        MealService mealService = MealService.getInstance();
+        List<Meal> meals = mealService.getMealsByUserId(user.getId());
+
+        if (meals.isEmpty()) {
+            System.out.println("⚠️ Nu există mese în baza de date.");
+            return;
+        }
+
+        System.out.println("\n📋 Mese disponibile:");
+        for (Meal meal : meals) {
+            System.out.printf("%d: %s - Rețetă: %s\n", meal.getId(), meal.getMealType(), meal.getRecipe().getName());
+        }
+
+        System.out.print("Introduceți ID-ul mesei pe care doriți să o ștergeți: ");
+        int id;
+        while (true) {
+            try {
+                id = Integer.parseInt(scanner.nextLine().trim());
+                final int finalId = id;
+                if (meals.stream().anyMatch(m -> m.getId() == finalId)) break;
+                System.out.print("⚠️ ID invalid. Introduceți un ID valid: ");
+            } catch (NumberFormatException e) {
+                System.out.print("⚠️ ID-ul trebuie să fie un număr. Reintroduceți: ");
+            }
+        }
+
+        mealService.deleteMeal(id);
+        System.out.println("✅ Masa a fost ștearsă cu succes!");
+
+        AuditService.getInstance().logAction("deleteMeal");
     }
 }

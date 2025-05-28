@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IngredientDAO {
+
     public void insertIngredient(Ingredient ingredient) {
         String sql = "INSERT INTO ingredients (name, base_unit, macros_definition_unit, calories, protein, carbs, fats) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -86,5 +87,62 @@ public class IngredientDAO {
         };
         ingredient.setId(id);
         return ingredient;
+    }
+
+    public void updateIngredient(Ingredient ingredient) {
+        String sql = "UPDATE ingredients SET name = ?, base_unit = ?, macros_definition_unit = ?, " +
+                "calories = ?, protein = ?, carbs = ?, fats = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            String baseUnit = "";
+            String macrosDefinition = "PER_100_UNITS";
+            if (ingredient instanceof UnitIngredient) {
+                baseUnit = "piece";
+                macrosDefinition = "PER_PIECE";
+            } else if (ingredient instanceof WeightIngredient) {
+                baseUnit = "g";
+            } else if (ingredient instanceof VolumeIngredient) {
+                baseUnit = "ml";
+            }
+
+            pstmt.setString(1, ingredient.getName());
+            pstmt.setString(2, baseUnit);
+            pstmt.setString(3, macrosDefinition);
+            pstmt.setDouble(4, ingredient.getMacros().getCalories());
+            pstmt.setDouble(5, ingredient.getMacros().getProteins());
+            pstmt.setDouble(6, ingredient.getMacros().getCarbs());
+            pstmt.setDouble(7, ingredient.getMacros().getFats());
+            pstmt.setInt(8, ingredient.getId());
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("✅ Ingredient updated successfully.");
+            } else {
+                System.out.println("⚠️ No ingredient found with the given ID.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteIngredient(int id) {
+        String sql = "DELETE FROM ingredients WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, id);
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("✅ Ingredient deleted successfully.");
+            } else {
+                System.out.println("⚠️ No ingredient found with the given ID.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

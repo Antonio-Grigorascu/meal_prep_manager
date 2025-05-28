@@ -10,6 +10,18 @@ import java.util.List;
 
 public class UserDAO {
 
+//    private static UserDAO instance;
+//
+//    private UserDAO() {}
+//
+//    public static synchronized UserDAO getInstance() {
+//        if (instance == null) {
+//            instance = new UserDAO();
+//        }
+//        return instance;
+//    }
+
+
     public boolean insertUser(User userObj) {
         Connection conn = null;
         try {
@@ -143,4 +155,64 @@ public class UserDAO {
         }
         return history;
     }
+
+    public boolean updateUser(User user) {
+        String sql = "UPDATE users SET name = ?, age = ?, weight = ?, height = ?, gender = ?, activity_level = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, user.getName());
+            stmt.setInt(2, user.getAge());
+            stmt.setDouble(3, user.getWeight());
+            stmt.setDouble(4, user.getHeight());
+            stmt.setString(5, user.getGender());
+            stmt.setString(6, user.getActivityLevel().name());
+            stmt.setInt(7, user.getId());
+
+            int rowsUpdated = stmt.executeUpdate();
+            return rowsUpdated > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteUser(int userId) {
+        String deleteHistorySql = "DELETE FROM weight_history WHERE user_id = ?";
+        String deleteUserSql = "DELETE FROM users WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement deleteHistoryStmt = conn.prepareStatement(deleteHistorySql);
+                 PreparedStatement deleteUserStmt = conn.prepareStatement(deleteUserSql)) {
+
+                // Sterg istoricul de greutate
+                deleteHistoryStmt.setInt(1, userId);
+                deleteHistoryStmt.executeUpdate();
+
+                // Sterg user-ul
+                deleteUserStmt.setInt(1, userId);
+                int rowsDeleted = deleteUserStmt.executeUpdate();
+
+                conn.commit();
+                return rowsDeleted > 0;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 }

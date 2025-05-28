@@ -66,6 +66,30 @@ public class User implements Trackable {
     public void setId(int id) { this.id = id; }
     public void setWeightHistory(List<Double> weightHistory) { this.weightHistory = weightHistory; }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setActivityLevel(ActivityLevel activityLevel) {
+        this.activityLevel = activityLevel;
+    }
+
     @Override
     public void printWeightProgress() {
         System.out.println("📉 Progresul greutății pentru " + name + ":");

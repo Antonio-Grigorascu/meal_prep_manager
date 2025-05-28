@@ -157,4 +157,74 @@ public class RecipeDAO {
         }
         return recipe;
     }
+
+    public void updateRecipe(Recipe recipe) {
+        String updateRecipeSql = "UPDATE recipes SET name = ? WHERE id = ?";
+        String deleteIngredientsSql = "DELETE FROM recipe_ingredients WHERE recipe_id = ?";
+        String insertIngredientsSql = "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity) VALUES (?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement updateRecipeStmt = conn.prepareStatement(updateRecipeSql);
+             PreparedStatement deleteIngredientsStmt = conn.prepareStatement(deleteIngredientsSql);
+             PreparedStatement insertIngredientsStmt = conn.prepareStatement(insertIngredientsSql)) {
+
+            conn.setAutoCommit(false);
+
+            updateRecipeStmt.setString(1, recipe.getName());
+            updateRecipeStmt.setInt(2, recipe.getId());
+            updateRecipeStmt.executeUpdate();
+
+            deleteIngredientsStmt.setInt(1, recipe.getId());
+            deleteIngredientsStmt.executeUpdate();
+
+            if (recipe.getIngredients() != null && !recipe.getIngredients().isEmpty()) {
+                for (Map.Entry<Ingredient, Double> entry : recipe.getIngredients().entrySet()) {
+                    if (entry.getKey().getId() == 0) {
+                        System.err.println("Avertisment: Ingredientul " + entry.getKey().getName() + " nu are ID. Nu se poate adăuga în rețetă.");
+                        continue;
+                    }
+                    insertIngredientsStmt.setInt(1, recipe.getId());
+                    insertIngredientsStmt.setInt(2, entry.getKey().getId());
+                    insertIngredientsStmt.setDouble(3, entry.getValue());
+                    insertIngredientsStmt.addBatch();
+                }
+                insertIngredientsStmt.executeBatch();
+            }
+
+            conn.commit();
+            System.out.println("✅ Rețetă actualizată cu succes!");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteRecipe(int recipeId) {
+        String deleteIngredientsSql = "DELETE FROM recipe_ingredients WHERE recipe_id = ?";
+        String deleteRecipeSql = "DELETE FROM recipes WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement deleteIngredientsStmt = conn.prepareStatement(deleteIngredientsSql);
+             PreparedStatement deleteRecipeStmt = conn.prepareStatement(deleteRecipeSql)) {
+
+            conn.setAutoCommit(false);
+
+            deleteIngredientsStmt.setInt(1, recipeId);
+            deleteIngredientsStmt.executeUpdate();
+
+            deleteRecipeStmt.setInt(1, recipeId);
+            int affectedRows = deleteRecipeStmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                conn.commit();
+                System.out.println("✅ Rețetă ștearsă cu succes!");
+            } else {
+                conn.rollback();
+                System.out.println("⚠️ Nu s-a găsit nicio rețetă cu ID-ul specificat.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
