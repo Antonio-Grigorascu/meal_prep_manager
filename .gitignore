@@ -16,6 +16,9 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+### Audit ###
+logs/audit.csv
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
